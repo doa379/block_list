@@ -40,7 +40,7 @@ void block_tpool_queue(block_tpool_t *block_tpool, void (*func)(void *, void *),
     }
   
   pthread_mutex_lock(&block_tpool->mutex);
-  block_list_add(block_tpool->list_jobs_q, &job);
+  block_list_add(&block_tpool->list_jobs_q, &job);
   pthread_mutex_unlock(&block_tpool->mutex);
   pthread_cond_signal(&block_tpool->cond_var);
 }

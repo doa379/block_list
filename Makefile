@@ -2,7 +2,7 @@ LIBS_PATH = /lib/x86_64-linux-gnu/ /usr/lib/x86_64-linux-gnu/
 INCS =
 LIBS = -l pthread
 
-SRC_QUEUE = block_list.c
+SRC_QUEUE = block_list.c block_tpool.c
 OBJ_QUEUE = ${SRC_QUEUE:.c=.o}
 
 CC = gcc
