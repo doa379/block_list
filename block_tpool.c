@@ -1,14 +1,14 @@
 #include <string.h>
 #include "block_tpool.h"
 
-static void job_del(void *node, void *context)
+static void job_del(void *node, void *userp)
 {
   block_job_t *job = (block_job_t *) node;
 
   if (job->arg_size)
     free(job->arg);
 
-  block_list_t *list = (block_list_t *) context;
+  block_list_t *list = (block_list_t *) userp;
   block_list_remove(list, node);
 }
 
@@ -25,7 +25,7 @@ static void queue_pop(block_tpool_t *block_tpool)
   job_del(head, block_tpool->list_jobs_q);
 }
 
-void block_tpool_queue(block_tpool_t *block_tpool, void (*func)(void *, void *), void *arg, size_t size)
+void block_tpool_queue(block_tpool_t *block_tpool, void (*func)(void *), void *arg, size_t size)
 {
   block_job_t job = {
     .func = func,
@@ -64,8 +64,8 @@ static void *worker_th(void *userp)
       
       block_job_t *job = block_list_head(block_tpool->list_jobs_q);
       pthread_mutex_unlock(&block_tpool->mutex);
-      void (*func)(void *, void *) = job->func;
-      func(block_tpool->context, job->arg);
+      void (*func)(void *) = job->func;
+      func(job->arg);
       pthread_mutex_lock(&block_tpool->mutex);
       queue_pop(block_tpool);
       pthread_mutex_unlock(&block_tpool->mutex);
@@ -87,12 +87,11 @@ void block_tpool_del(block_tpool_t *block_tpool)
   block_tpool = NULL;
 }
 
-block_tpool_t *block_tpool_new(size_t alloc_size, void *context)
+block_tpool_t *block_tpool_new(size_t init_alloc_size)
 {
   block_tpool_t *block_tpool = malloc(sizeof *block_tpool);
   block_tpool->quit = 0;
-  block_tpool->list_jobs_q = block_list_new(alloc_size, sizeof(block_job_t));
-  block_tpool->context = context;
+  block_tpool->list_jobs_q = block_list_new(init_alloc_size, sizeof(block_job_t));
   pthread_mutex_init(&block_tpool->mutex, NULL);
   pthread_cond_init(&block_tpool->cond_var, NULL);
   pthread_create(&block_tpool->pth, NULL, worker_th, (void *) block_tpool);

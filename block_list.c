@@ -140,8 +140,8 @@ void block_list_clear(block_list_t *list)
   list->count = 0;
 }
 
-void block_list_for_each(block_list_t *list, void (*callback)(void *, void *), void *context)
+void block_list_for_each(block_list_t *list, void (*callback)(void *, void *), void *userp)
 {
   for (void *n = block_list_head(list); n; n = block_list_next(list, n))
-    callback(n, context);
+    callback(n, userp);
 }

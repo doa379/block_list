@@ -7,9 +7,9 @@
 #include <time.h>
 #include "block_tpool.h"
 
-void func_cb(void *context, void *data)
+void func_cb(void *userp)
 {
-  int *v = (int *) data;
+  int *v = (int *) userp;
   printf("Job %d\n", *v);
   sleep(1);
   printf("Job %d complete\n", *v);
@@ -17,10 +17,10 @@ void func_cb(void *context, void *data)
 
 int main()
 {
-  block_tpool_t *block_tpool = block_tpool_new(5, NULL);
+  block_tpool_t *block_tpool = block_tpool_new(5);
   srand(time(NULL));
 
-  for (unsigned i = 0; i < 5; i++)
+  for (unsigned i = 0; i < 10; i++)
     {
       int v = rand() % 100;
       block_tpool_queue(block_tpool, func_cb, &v, sizeof v);

@@ -6,7 +6,7 @@
 
 typedef struct
 {
-  void (*func)(void *, void *);
+  void (*func)(void *);
   void *arg;
   size_t arg_size;
 } block_job_t;
@@ -14,16 +14,15 @@ typedef struct
 typedef struct
 {
   block_list_t *list_jobs_q;
-  void *context;
   pthread_mutex_t mutex;
   pthread_cond_t cond_var;
   pthread_t pth;
   bool quit;
 } block_tpool_t;
 
-block_tpool_t *block_tpool_new(size_t, void *);
+block_tpool_t *block_tpool_new(size_t);
 void block_tpool_del(block_tpool_t *);
 void block_tpool_clear(block_tpool_t *);
-void block_tpool_queue(block_tpool_t *, void (*)(void *, void *), void *, size_t);
+void block_tpool_queue(block_tpool_t *, void (*)(void *), void *, size_t);
 
 #endif
