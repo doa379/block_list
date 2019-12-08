@@ -35,23 +35,23 @@ void block_list_del(block_list_t *list)
 
 void *block_list_head(block_list_t *list)
 {
-  if (!list->count)
+  if (!block_list_count(list))
     return NULL;
 
-  return (char *) list + sizeof *list;
+  return list->data;
 }
 
 void *block_list_tail(block_list_t *list)
 {
-  if (!list->count)
+  if (!block_list_count(list))
     return NULL;
 
-  return (char *) list + sizeof *list + (list->count - 1) * list->el_size;
+  return list->data + (list->count - 1) * list->el_size;
 }
 
 bool block_list_add(block_list_t **list, void *data)
 {
-  if ((*list)->count > (*list)->alloc_count - 1)
+  if (block_list_count(*list) > (*list)->alloc_count - 1)
     {
       block_list_t *swap = realloc(*list, sizeof **list + ((*list)->alloc_count + ALLOC_INC_COUNT) * (*list)->el_size);
 
@@ -126,7 +126,7 @@ void *block_list_itr_tail(block_list_t *list, size_t n)
 
 void block_list_remove_tail(block_list_t *list)
 {
-  if (list->count)
+  if (block_list_count(list))
     list->count--;
 }
 
@@ -142,6 +142,6 @@ void block_list_clear(block_list_t *list)
 
 void block_list_for_each(block_list_t *list, void (*callback)(void *, void *), void *userp)
 {
-  for (void *n = block_list_head(list); n; n = block_list_next(list, n))
+  for (char *n = block_list_head(list); n; n = block_list_next(list, n))
     callback(n, userp);
 }

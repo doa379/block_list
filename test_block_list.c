@@ -36,14 +36,14 @@ int main()
     printf("%d ", *(int *) n);
 
   printf("\nIterate from head\n");
-  for (int i = 0; i < list->count; i++)
+  for (int i = 0; i < block_list_count(list); i++)
     printf("%d ", *(int *) block_list_itr_head(list, i));
 
   printf("\nRemove from tail\n");
   for (int *n = block_list_tail(list), i = 0; n && i < 3; n = block_list_prev(list, n), i++)
     block_list_remove(list, n);
   
-  for (int i = 0; i < list->count; i++)
+  for (int i = 0; i < block_list_count(list); i++)
     printf("%d ", *(int *) block_list_itr_head(list, i));
 
   printf("\nRemove from head\n");
@@ -51,12 +51,11 @@ int main()
     //if (i == 1)
       block_list_remove(list, n);
   
-  for (int i = 0; i < list->count; i++)
+  for (int i = 0; i < block_list_count(list); i++)
     printf("%d ", *(int *) block_list_itr_head(list, i));
 
   printf("\n");
   block_list_del(list);
-
   printf("\nStoring Pointer\n===============\n");
   int V[] = { 4, 7, 8, 9 };
   block_list_t *list_p = block_list_new(5, sizeof(int *));
