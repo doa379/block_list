@@ -68,12 +68,12 @@ int main()
     }
 
   block_list_for_each(list_p, print, NULL);
-  printf("\n");
+  putchar('\n');
 
   for (int **i = block_list_head(list_p); i; i = block_list_next(list_p, i))
     printf("%d ", **(int **) i);
   
-  printf("\n");
+  putchar('\n');
   block_list_del(list_p);
   return 0;
 }

@@ -107,10 +107,7 @@ void *block_list_prev(block_list_t *list, void *data)
 
 void *block_list_itr_head(block_list_t *list, size_t n)
 {
-  if (!list->count)
-    return NULL;
-
-  else if (n > list->count - 1)
+  if (!block_list_count(list) || n > list->count - 1)
     return NULL;
   
   return (char *) block_list_head(list) + (n * list->el_size);
@@ -118,7 +115,7 @@ void *block_list_itr_head(block_list_t *list, size_t n)
 
 void *block_list_itr_tail(block_list_t *list, size_t n)
 {
-  if (n > list->count - 1)
+  if (!block_list_count(list) || n > list->count - 1)
     return NULL;
   
   return (char *) block_list_tail(list) - n * list->el_size;
