@@ -24,6 +24,6 @@ bltpool_t *bltpool_new(size_t);
 void bltpool_del(bltpool_t *);
 void bltpool_clear(bltpool_t *);
 size_t bltpool_job_count(bltpool_t *);
-void bltpool_queue(bltpool_t *, void (*)(void *), void *, size_t);
+bool bltpool_queue(bltpool_t *, void (*)(void *), void *, size_t);
 
 #endif

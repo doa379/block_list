@@ -34,7 +34,7 @@ static void queue_pop(bltpool_t *bltpool)
   job_del(head, bltpool->list_jobs_q);
 }
 
-void bltpool_queue(bltpool_t *bltpool, void (*func)(void *), void *arg, size_t size)
+bool bltpool_queue(bltpool_t *bltpool, void (*func)(void *), void *arg, size_t size)
 {
   bltpool_job_t job = {
     .func = func,
@@ -44,14 +44,30 @@ void bltpool_queue(bltpool_t *bltpool, void (*func)(void *), void *arg, size_t s
 
   if (size)
   {
-    job.arg = malloc(size);
+    if ((job.arg = malloc(size)) == NULL)
+      return 0;
+
     memcpy(job.arg, arg, size);
   }
 
   pthread_mutex_lock(&bltpool->mutex);
-  bl_add(&bltpool->list_jobs_q, &job);
-  pthread_mutex_unlock(&bltpool->mutex);
-  pthread_cond_signal(&bltpool->cond_var);
+  
+  if (bl_add(&bltpool->list_jobs_q, &job))
+  {
+    pthread_mutex_unlock(&bltpool->mutex);
+    pthread_cond_signal(&bltpool->cond_var);
+  }
+
+  else
+  {
+    if (size)
+      free(job.arg);
+
+    pthread_mutex_unlock(&bltpool->mutex);
+    return 0;
+  }
+
+  return 1;
 }
 
 static void *worker_th(void *userp)
@@ -73,8 +89,7 @@ static void *worker_th(void *userp)
 
     bltpool_job_t *job = bl_head(bltpool->list_jobs_q);
     pthread_mutex_unlock(&bltpool->mutex);
-    void (*func)(void *) = job->func;
-    func(job->arg);
+    (job->func)(job->arg);
     pthread_mutex_lock(&bltpool->mutex);
     queue_pop(bltpool);
     pthread_mutex_unlock(&bltpool->mutex);
