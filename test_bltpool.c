@@ -29,7 +29,7 @@ int main()
 
   while (bltpool_job_count(bltpool))
     {
-      printf("%d jobs remaining\n", bltpool_job_count(bltpool));
+      printf("%zu jobs remaining\n", bltpool_job_count(bltpool));
       sleep(1);
     }
 
