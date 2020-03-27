@@ -1,11 +1,11 @@
 /*
-  $ cc test_block_tpool.c -L $PWD -l block_queue -Wl,-rpath,$PWD -o test_block_tpool && ./test_block_tpool
+  $ cc test_bltpool.c -L $PWD -l blqueue -Wl,-rpath,$PWD -o test_bltpool && ./test_bltpool
 */
 
 #include <stdio.h>
 #include <unistd.h>
 #include <time.h>
-#include "block_tpool.h"
+#include "bltpool.h"
 
 void func_cb(void *userp)
 {
@@ -17,22 +17,22 @@ void func_cb(void *userp)
 
 int main()
 {
-  block_tpool_t *block_tpool = block_tpool_new(5);
+  bltpool_t *bltpool = bltpool_new(5);
   srand(time(NULL));
 
   for (unsigned i = 0; i < 10; i++)
     {
       int v = rand() % 100;
-      block_tpool_queue(block_tpool, func_cb, &v, sizeof v);
+      bltpool_queue(bltpool, func_cb, &v, sizeof v);
       printf("Data %d job added\n", v);
     }
 
-  while (block_list_count(block_tpool->list_jobs_q))
+  while (bltpool_job_count(bltpool))
     {
-      printf("%d jobs remaining\n", block_list_count(block_tpool->list_jobs_q));
+      printf("%d jobs remaining\n", bltpool_job_count(bltpool));
       sleep(1);
     }
 
-  block_tpool_del(block_tpool);
+  bltpool_del(bltpool);
   return 0;
 }

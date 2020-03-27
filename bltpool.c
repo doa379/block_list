@@ -1,99 +1,108 @@
 #include <string.h>
-#include "block_tpool.h"
+#include "bltpool.h"
 
 static void job_del(void *node, void *userp)
 {
-  block_job_t *job = (block_job_t *) node;
+  bltpool_job_t *job = (bltpool_job_t *) node;
 
   if (job->arg_size)
     free(job->arg);
 
-  block_list_t *list = (block_list_t *) userp;
-  block_list_remove(list, node);
+  bl_t *list = (bl_t *) userp;
+  bl_remove(list, node);
 }
 
-void block_tpool_clear(block_tpool_t *block_tpool)
+void bltpool_clear(bltpool_t *bltpool)
 {
-  pthread_mutex_lock(&block_tpool->mutex);
-  block_list_for_each(block_tpool->list_jobs_q, job_del, block_tpool->list_jobs_q);
-  pthread_mutex_unlock(&block_tpool->mutex);
+  pthread_mutex_lock(&bltpool->mutex);
+  bl_for_each(bltpool->list_jobs_q, job_del, bltpool->list_jobs_q);
+  pthread_mutex_unlock(&bltpool->mutex);
 }
 
-static void queue_pop(block_tpool_t *block_tpool)
+size_t bltpool_job_count(bltpool_t *bltpool)
 {
-  void *head = block_list_head(block_tpool->list_jobs_q);
-  job_del(head, block_tpool->list_jobs_q);
+  size_t count;
+  pthread_mutex_lock(&bltpool->mutex);
+  count = bl_count(bltpool->list_jobs_q);
+  pthread_mutex_unlock(&bltpool->mutex);
+  return count;
 }
 
-void block_tpool_queue(block_tpool_t *block_tpool, void (*func)(void *), void *arg, size_t size)
+static void queue_pop(bltpool_t *bltpool)
 {
-  block_job_t job = {
+  void *head = bl_head(bltpool->list_jobs_q);
+  job_del(head, bltpool->list_jobs_q);
+}
+
+void bltpool_queue(bltpool_t *bltpool, void (*func)(void *), void *arg, size_t size)
+{
+  bltpool_job_t job = {
     .func = func,
     .arg = arg,
     .arg_size = size
   };
 
   if (size)
-    {
-      job.arg = malloc(size);
-      memcpy(job.arg, arg, size);
-    }
-  
-  pthread_mutex_lock(&block_tpool->mutex);
-  block_list_add(&block_tpool->list_jobs_q, &job);
-  pthread_mutex_unlock(&block_tpool->mutex);
-  pthread_cond_signal(&block_tpool->cond_var);
+  {
+    job.arg = malloc(size);
+    memcpy(job.arg, arg, size);
+  }
+
+  pthread_mutex_lock(&bltpool->mutex);
+  bl_add(&bltpool->list_jobs_q, &job);
+  pthread_mutex_unlock(&bltpool->mutex);
+  pthread_cond_signal(&bltpool->cond_var);
 }
 
 static void *worker_th(void *userp)
 {
-  block_tpool_t *block_tpool = userp;
-  
+  bltpool_t *bltpool = userp;
+
   while (1)
+  {
+    pthread_mutex_lock(&bltpool->mutex);
+
+    while (!bl_count(bltpool->list_jobs_q) && !bltpool->quit)
+      pthread_cond_wait(&bltpool->cond_var, &bltpool->mutex);
+
+    if (bltpool->quit)
     {
-      pthread_mutex_lock(&block_tpool->mutex);
-
-      while (!block_list_count(block_tpool->list_jobs_q) && !block_tpool->quit)
-	pthread_cond_wait(&block_tpool->cond_var, &block_tpool->mutex);
-
-      if (block_tpool->quit)
-	{
-	  pthread_mutex_unlock(&block_tpool->mutex);
-	  return NULL;
-	}
-      
-      block_job_t *job = block_list_head(block_tpool->list_jobs_q);
-      pthread_mutex_unlock(&block_tpool->mutex);
-      void (*func)(void *) = job->func;
-      func(job->arg);
-      pthread_mutex_lock(&block_tpool->mutex);
-      queue_pop(block_tpool);
-      pthread_mutex_unlock(&block_tpool->mutex);
+      pthread_mutex_unlock(&bltpool->mutex);
+      return NULL;
     }
+
+    bltpool_job_t *job = bl_head(bltpool->list_jobs_q);
+    pthread_mutex_unlock(&bltpool->mutex);
+    void (*func)(void *) = job->func;
+    func(job->arg);
+    pthread_mutex_lock(&bltpool->mutex);
+    queue_pop(bltpool);
+    pthread_mutex_unlock(&bltpool->mutex);
+  }
 
   return NULL;
 }
 
-void block_tpool_del(block_tpool_t *block_tpool)
+void bltpool_del(bltpool_t *bltpool)
 {
-  block_tpool->quit = 1;
-  block_tpool_clear(block_tpool);
-  pthread_cond_signal(&block_tpool->cond_var);
-  pthread_join(block_tpool->pth, NULL);
-  pthread_cond_destroy(&block_tpool->cond_var);
-  pthread_mutex_destroy(&block_tpool->mutex);
-  block_list_del(block_tpool->list_jobs_q);
-  free(block_tpool);
-  block_tpool = NULL;
+  bltpool->quit = 1;
+  bltpool_clear(bltpool);
+  pthread_cond_signal(&bltpool->cond_var);
+  pthread_join(bltpool->pth, NULL);
+  pthread_cond_destroy(&bltpool->cond_var);
+  pthread_mutex_destroy(&bltpool->mutex);
+  bl_del(bltpool->list_jobs_q);
+  free(bltpool);
+  bltpool = NULL;
 }
 
-block_tpool_t *block_tpool_new(size_t init_alloc_size)
+bltpool_t *bltpool_new(size_t init_alloc_size)
 {
-  block_tpool_t *block_tpool = malloc(sizeof *block_tpool);
-  block_tpool->quit = 0;
-  block_tpool->list_jobs_q = block_list_new(init_alloc_size, sizeof(block_job_t));
-  pthread_mutex_init(&block_tpool->mutex, NULL);
-  pthread_cond_init(&block_tpool->cond_var, NULL);
-  pthread_create(&block_tpool->pth, NULL, worker_th, (void *) block_tpool);
-  return block_tpool;
+  bltpool_t *bltpool = malloc(sizeof *bltpool);
+  bltpool->quit = 0;
+  bltpool->list_jobs_q = bl_new(init_alloc_size, sizeof(bltpool_job_t));
+  pthread_mutex_init(&bltpool->mutex, NULL);
+  pthread_cond_init(&bltpool->cond_var, NULL);
+  pthread_create(&bltpool->pth, NULL, worker_th, (void *) bltpool);
+  return bltpool;
 }

@@ -2,27 +2,28 @@
 #define BLOCK_TPOOL_H
 
 #include <pthread.h>
-#include "block_list.h"
+#include "bl.h"
 
 typedef struct
 {
   void (*func)(void *);
   void *arg;
   size_t arg_size;
-} block_job_t;
+} bltpool_job_t;
 
 typedef struct
 {
-  block_list_t *list_jobs_q;
+  bl_t *list_jobs_q;
   pthread_mutex_t mutex;
   pthread_cond_t cond_var;
   pthread_t pth;
   bool quit;
-} block_tpool_t;
+} bltpool_t;
 
-block_tpool_t *block_tpool_new(size_t);
-void block_tpool_del(block_tpool_t *);
-void block_tpool_clear(block_tpool_t *);
-void block_tpool_queue(block_tpool_t *, void (*)(void *), void *, size_t);
+bltpool_t *bltpool_new(size_t);
+void bltpool_del(bltpool_t *);
+void bltpool_clear(bltpool_t *);
+size_t bltpool_job_count(bltpool_t *);
+void bltpool_queue(bltpool_t *, void (*)(void *), void *, size_t);
 
 #endif

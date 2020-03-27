@@ -1,11 +1,11 @@
 #include <string.h>
-#include "block_list.h"
+#include "bl.h"
 
 #define ALLOC_INC_COUNT 128
 
-block_list_t *block_list_new(size_t alloc_count, size_t el_size)
+bl_t *bl_new(size_t alloc_count, size_t el_size)
 {
-  block_list_t *list = malloc(sizeof *list + alloc_count * el_size);
+  bl_t *list = malloc(sizeof *list + alloc_count * el_size);
   
   if (list == NULL)
     return NULL;
@@ -16,9 +16,9 @@ block_list_t *block_list_new(size_t alloc_count, size_t el_size)
   return list;
 }
 
-block_list_t *block_list_replicate(block_list_t *list)
+bl_t *bl_dup(bl_t *list)
 {
-  block_list_t *replicate = block_list_new(list->alloc_count, list->el_size);
+  bl_t *replicate = bl_new(list->alloc_count, list->el_size);
 
   if (replicate == NULL)
     return NULL;
@@ -28,32 +28,32 @@ block_list_t *block_list_replicate(block_list_t *list)
   return replicate;
 }
 
-void block_list_del(block_list_t *list)
+void bl_del(bl_t *list)
 {
   free(list);
 }
 
-void *block_list_head(block_list_t *list)
+void *bl_head(bl_t *list)
 {
-  if (!block_list_count(list))
+  if (!bl_count(list))
     return NULL;
 
   return list->data;
 }
 
-void *block_list_tail(block_list_t *list)
+void *bl_tail(bl_t *list)
 {
-  if (!block_list_count(list))
+  if (!bl_count(list))
     return NULL;
 
   return list->data + (list->count - 1) * list->el_size;
 }
 
-bool block_list_add(block_list_t **list, void *data)
+bool bl_add(bl_t **list, void *data)
 {
-  if (block_list_count(*list) > (*list)->alloc_count - 1)
+  if (bl_count(*list) > (*list)->alloc_count - 1)
     {
-      block_list_t *swap = realloc(*list, sizeof **list + ((*list)->alloc_count + ALLOC_INC_COUNT) * (*list)->el_size);
+      bl_t *swap = realloc(*list, sizeof **list + ((*list)->alloc_count + ALLOC_INC_COUNT) * (*list)->el_size);
 
       if (swap == NULL)
 	return 0;
@@ -67,21 +67,21 @@ bool block_list_add(block_list_t **list, void *data)
   return 1;
 }
 
-void block_list_remove(block_list_t *list, void *data)
+void bl_remove(bl_t *list, void *data)
 {
-  if (data == block_list_tail(list));
+  if (data == bl_tail(list));
   
-  else if (data == block_list_head(list) && block_list_count(list) > 1)
-    memcpy(data, block_list_next(list, data), (block_list_count(list) - 1) * list->el_size);
+  else if (data == bl_head(list) && bl_count(list) > 1)
+    memcpy(data, bl_next(list, data), (bl_count(list) - 1) * list->el_size);
   
   else
     {
       size_t i = 0;
   
-      for (char *n = block_list_tail(list); n; n = block_list_prev(list, n), i++)
+      for (char *n = bl_tail(list); n; n = bl_prev(list, n), i++)
 	if (n == data)
 	  {
-	    memcpy(n, block_list_next(list, n), i * list->el_size);
+	    memcpy(n, bl_next(list, n), i * list->el_size);
 	    break;
 	  }
     }
@@ -89,56 +89,56 @@ void block_list_remove(block_list_t *list, void *data)
   list->count--;
 }
 
-void *block_list_next(block_list_t *list, void *data)
+void *bl_next(bl_t *list, void *data)
 {
-  if (data == block_list_tail(list))
+  if (data == bl_tail(list))
     return NULL;
 
   return (char *) data + list->el_size;
 }
 
-void *block_list_prev(block_list_t *list, void *data)
+void *bl_prev(bl_t *list, void *data)
 {
-  if (data == block_list_head(list))
+  if (data == bl_head(list))
     return NULL;
 
   return (char *) data - list->el_size;
 }
 
-void *block_list_itr_head(block_list_t *list, size_t n)
+void *bl_itr_head(bl_t *list, size_t n)
 {
-  if (!block_list_count(list) || n > list->count - 1)
+  if (!bl_count(list) || n > list->count - 1)
     return NULL;
   
-  return (char *) block_list_head(list) + (n * list->el_size);
+  return (char *) bl_head(list) + (n * list->el_size);
 }
 
-void *block_list_itr_tail(block_list_t *list, size_t n)
+void *bl_itr_tail(bl_t *list, size_t n)
 {
-  if (!block_list_count(list) || n > list->count - 1)
+  if (!bl_count(list) || n > list->count - 1)
     return NULL;
   
-  return (char *) block_list_tail(list) - n * list->el_size;
+  return (char *) bl_tail(list) - n * list->el_size;
 }
 
-void block_list_remove_tail(block_list_t *list)
+void bl_remove_tail(bl_t *list)
 {
-  if (block_list_count(list))
+  if (bl_count(list))
     list->count--;
 }
 
-size_t block_list_count(block_list_t *list)
+size_t bl_count(bl_t *list)
 {
   return list->count;
 }
 
-void block_list_clear(block_list_t *list)
+void bl_clear(bl_t *list)
 {
   list->count = 0;
 }
 
-void block_list_for_each(block_list_t *list, void (*callback)(void *, void *), void *userp)
+void bl_for_each(bl_t *list, void (*callback)(void *, void *), void *userp)
 {
-  for (char *n = block_list_head(list); n; n = block_list_next(list, n))
+  for (char *n = bl_head(list); n; n = bl_next(list, n))
     callback(n, userp);
 }
