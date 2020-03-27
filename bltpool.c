@@ -21,9 +21,8 @@ void bltpool_clear(bltpool_t *bltpool)
 
 size_t bltpool_job_count(bltpool_t *bltpool)
 {
-  size_t count;
   pthread_mutex_lock(&bltpool->mutex);
-  count = bl_count(bltpool->list_jobs_q);
+  size_t count = bl_count(bltpool->list_jobs_q);
   pthread_mutex_unlock(&bltpool->mutex);
   return count;
 }
