@@ -2,14 +2,14 @@ LIBS_PATH = /lib/x86_64-linux-gnu/ /usr/lib/x86_64-linux-gnu/
 INCS =
 LIBS = -l pthread
 
-SRC_QUEUE = block_list.c block_tpool.c
+SRC_QUEUE = bl.c bltpool.c
 OBJ_QUEUE = ${SRC_QUEUE:.c=.o}
 
 CC = gcc
 CFLAGS = -std=c11 -c -g -Wall -Werror -pie -fPIC -pedantic ${INCS}
 LDFLAGS = ${LIBS}
 
-all: libblock_queue.so
+all: libblqueue.so
 
 .c.o:
 		@echo CC $<
@@ -22,5 +22,5 @@ libblock_queue.so: ${OBJ_QUEUE}
 clean:
 		@echo cleaning
 		@rm -f ${OBJ_QUEUE}
-		@rm -f test_block_list
-		@rm -f test_block_tpool
+		@rm -f test_bl
+		@rm -f test_bltpool
