@@ -99,8 +99,19 @@ void bltpool_del(bltpool_t *bltpool)
 bltpool_t *bltpool_new(size_t init_alloc_size)
 {
   bltpool_t *bltpool = malloc(sizeof *bltpool);
+
+  if (bltpool == NULL)
+    return NULL;
+
   bltpool->quit = 0;
   bltpool->list_jobs_q = bl_new(init_alloc_size, sizeof(bltpool_job_t));
+
+  if (bltpool->list_jobs_q == NULL)
+  {
+    free(bltpool);
+    return NULL;
+  }
+
   pthread_mutex_init(&bltpool->mutex, NULL);
   pthread_cond_init(&bltpool->cond_var, NULL);
   pthread_create(&bltpool->pth, NULL, worker_th, (void *) bltpool);
