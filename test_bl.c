@@ -6,7 +6,7 @@
 #include <time.h>
 #include "bl.h"
 
-void print(void *n, void *context)
+static void print(void *n, void *context)
 {
   printf("%d(%p) ", **(int **) n, n);
 }

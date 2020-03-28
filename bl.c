@@ -1,7 +1,7 @@
 #include <string.h>
 #include "bl.h"
 
-#define ALLOC_INC_COUNT 128
+#define ALLOC_INC_COUNT 127
 
 bl_t *bl_new(size_t alloc_count, size_t el_size)
 {
@@ -66,6 +66,7 @@ bool bl_add(bl_t **list, void *data)
   (*list)->count++;
   return 1;
 }
+
 
 void bl_remove(bl_t *list, void *data)
 {
