@@ -5,8 +5,9 @@ static void job_del(void *node, void *userp)
 {
   bltpool_job_t *job = (bltpool_job_t *) node;
 
-  if (job->arg_size)
-    free(job->arg);
+  for (unsigned i = 0; i < job->nargs; i++)
+    if (job->ARG[i].size)
+      free(job->ARG[i].arg);
 
   bl_t *list = (bl_t *) userp;
   bl_remove(list, node);
@@ -33,22 +34,37 @@ static void queue_pop(bltpool_t *bltpool)
   job_del(head, bltpool->Q);
 }
 
-bool bltpool_queue(bltpool_t *bltpool, void (*func)(void *), void *arg, size_t size)
+bool bltpool_queue(bltpool_t *bltpool, void (*func)(arg_t []), unsigned n, ...)
 {
-  bltpool_job_t job = {
-    .func = func,
-    .arg = arg,
-    .arg_size = size
-  };
+  bltpool_job_t job = { .func = func, .nargs = n };
+  va_list valist;
+  va_start(valist, n);
 
-  if (size)
+  for (unsigned i = 0; i < n; i++)
   {
-    if ((job.arg = malloc(size)) == NULL)
-      return 0;
+    arg_t arg = va_arg(valist, arg_t);
 
-    memcpy(job.arg, arg, size);
+    if (arg.size)
+    {
+      void *data;
+      
+      if ((data = malloc(arg.size)) == NULL)
+      {
+        for (unsigned j = 0; j < i - 1; j++)
+          if (job.ARG[j].size)
+            free(job.ARG[j].arg);
+
+        return 0;
+      }
+
+      memcpy(data, arg.arg, arg.size);
+      arg.arg = data;
+    }
+    
+    job.ARG[i] = arg;
   }
-
+  
+  va_end(valist);
   pthread_mutex_lock(&bltpool->mutex);
   
   if (bl_add(&bltpool->Q, &job))
@@ -59,8 +75,9 @@ bool bltpool_queue(bltpool_t *bltpool, void (*func)(void *), void *arg, size_t s
 
   else
   {
-    if (size)
-      free(job.arg);
+    for (unsigned i = 0; i < n; i++)
+      if (job.ARG[i].size)
+        free(job.ARG[i].arg);
 
     pthread_mutex_unlock(&bltpool->mutex);
     return 0;
@@ -88,7 +105,7 @@ static void *worker_th(void *userp)
 
     bltpool_job_t *job = bl_head(bltpool->Q);
     pthread_mutex_unlock(&bltpool->mutex);
-    (job->func)(job->arg);
+    (job->func)(job->ARG);
     pthread_mutex_lock(&bltpool->mutex);
     queue_pop(bltpool);
     pthread_mutex_unlock(&bltpool->mutex);

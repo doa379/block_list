@@ -2,13 +2,22 @@
 #define BLOCK_TPOOL_H
 
 #include <pthread.h>
+#include <stdarg.h>
 #include "bl.h"
+
+#define MAX_ARGS 4
 
 typedef struct
 {
-  void (*func)(void *);
   void *arg;
-  size_t arg_size;
+  size_t size;
+} arg_t;
+
+typedef struct
+{
+  void (*func)(arg_t []);
+  arg_t ARG[MAX_ARGS];
+  unsigned nargs;
 } bltpool_job_t;
 
 typedef struct
@@ -24,6 +33,6 @@ bltpool_t *bltpool_new(void);
 void bltpool_del(bltpool_t *);
 void bltpool_clear(bltpool_t *);
 size_t bltpool_job_count(bltpool_t *);
-bool bltpool_queue(bltpool_t *, void (*)(void *), void *, size_t);
+bool bltpool_queue(bltpool_t *, void (*)(arg_t []), unsigned, ...);
 
 #endif

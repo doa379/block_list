@@ -7,9 +7,9 @@
 #include <time.h>
 #include "bltpool.h"
 
-void func_cb(void *userp)
+void func_cb(arg_t ARG[])
 {
-  int *v = (int *) userp;
+  int *v = (int *) ARG[0].arg;
   printf("Job %d\n", *v);
   sleep(1);
   printf("Job %d complete\n", *v);
@@ -23,7 +23,7 @@ int main()
   for (unsigned i = 0; i < 10; i++)
     {
       int v = rand() % 100;
-      bltpool_queue(bltpool, func_cb, &v, sizeof v);
+      bltpool_queue(bltpool, func_cb, 1, &v, sizeof v);
       printf("Data %d job added\n", v);
     }
 
