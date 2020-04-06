@@ -13,14 +13,14 @@ typedef struct
 
 typedef struct
 {
-  bl_t *list_jobs_q;
+  bl_t *Q;
   pthread_mutex_t mutex;
   pthread_cond_t cond_var;
   pthread_t pth;
   bool quit;
 } bltpool_t;
 
-bltpool_t *bltpool_new(size_t);
+bltpool_t *bltpool_new(void);
 void bltpool_del(bltpool_t *);
 void bltpool_clear(bltpool_t *);
 size_t bltpool_job_count(bltpool_t *);

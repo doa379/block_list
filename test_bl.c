@@ -13,7 +13,7 @@ static void print(void *n, void *context)
 
 int main()
 {
-  bl_t *list = bl_new(5, sizeof(int));
+  bl_t *list = bl_new(sizeof(int));
   srand(time(NULL));
 
   for (unsigned i = 0; i < 10; i++)
@@ -37,14 +37,14 @@ int main()
 
   printf("\nIterate from head\n");
   for (int i = 0; i < bl_count(list); i++)
-    printf("%d ", *(int *) bl_itr_head(list, i));
+    printf("%d ", *(int *) bl_at(list, i));
 
   printf("\nRemove from tail\n");
   for (int *n = bl_tail(list), i = 0; n && i < 3; n = bl_prev(list, n), i++)
     bl_remove(list, n);
 
   for (int i = 0; i < bl_count(list); i++)
-    printf("%d ", *(int *) bl_itr_head(list, i));
+    printf("%d ", *(int *) bl_at(list, i));
 
   printf("\nRemove from head\n");
   for (int *n = bl_head(list), i = 0; n && i < 2; n = bl_next(list, n), i++)
@@ -52,13 +52,13 @@ int main()
     bl_remove(list, n);
 
   for (int i = 0; i < bl_count(list); i++)
-    printf("%d ", *(int *) bl_itr_head(list, i));
+    printf("%d ", *(int *) bl_at(list, i));
 
   printf("\n");
   bl_del(list);
   printf("\nStoring Pointer\n===============\n");
   int V[] = { 4, 7, 8, 9 };
-  bl_t *list_p = bl_new(5, sizeof(int *));
+  bl_t *list_p = bl_new(sizeof(int *));
 
   for (unsigned i = 0; i < 4; i++)
   {

@@ -15,22 +15,22 @@ static void job_del(void *node, void *userp)
 void bltpool_clear(bltpool_t *bltpool)
 {
   pthread_mutex_lock(&bltpool->mutex);
-  bl_for_each(bltpool->list_jobs_q, job_del, bltpool->list_jobs_q);
+  bl_for_each(bltpool->Q, job_del, bltpool->Q);
   pthread_mutex_unlock(&bltpool->mutex);
 }
 
 size_t bltpool_job_count(bltpool_t *bltpool)
 {
   pthread_mutex_lock(&bltpool->mutex);
-  size_t count = bl_count(bltpool->list_jobs_q);
+  size_t count = bl_count(bltpool->Q);
   pthread_mutex_unlock(&bltpool->mutex);
   return count;
 }
 
 static void queue_pop(bltpool_t *bltpool)
 {
-  void *head = bl_head(bltpool->list_jobs_q);
-  job_del(head, bltpool->list_jobs_q);
+  void *head = bl_head(bltpool->Q);
+  job_del(head, bltpool->Q);
 }
 
 bool bltpool_queue(bltpool_t *bltpool, void (*func)(void *), void *arg, size_t size)
@@ -51,7 +51,7 @@ bool bltpool_queue(bltpool_t *bltpool, void (*func)(void *), void *arg, size_t s
 
   pthread_mutex_lock(&bltpool->mutex);
   
-  if (bl_add(&bltpool->list_jobs_q, &job))
+  if (bl_add(&bltpool->Q, &job))
   {
     pthread_mutex_unlock(&bltpool->mutex);
     pthread_cond_signal(&bltpool->cond_var);
@@ -77,7 +77,7 @@ static void *worker_th(void *userp)
   {
     pthread_mutex_lock(&bltpool->mutex);
 
-    while (!bl_count(bltpool->list_jobs_q) && !bltpool->quit)
+    while (!bl_count(bltpool->Q) && !bltpool->quit)
       pthread_cond_wait(&bltpool->cond_var, &bltpool->mutex);
 
     if (bltpool->quit)
@@ -86,7 +86,7 @@ static void *worker_th(void *userp)
       return NULL;
     }
 
-    bltpool_job_t *job = bl_head(bltpool->list_jobs_q);
+    bltpool_job_t *job = bl_head(bltpool->Q);
     pthread_mutex_unlock(&bltpool->mutex);
     (job->func)(job->arg);
     pthread_mutex_lock(&bltpool->mutex);
@@ -105,22 +105,20 @@ void bltpool_del(bltpool_t *bltpool)
   pthread_join(bltpool->pth, NULL);
   pthread_cond_destroy(&bltpool->cond_var);
   pthread_mutex_destroy(&bltpool->mutex);
-  bl_del(bltpool->list_jobs_q);
+  bl_del(bltpool->Q);
   free(bltpool);
-  bltpool = NULL;
 }
 
-bltpool_t *bltpool_new(size_t init_alloc_size)
+bltpool_t *bltpool_new(void)
 {
-  bltpool_t *bltpool = malloc(sizeof *bltpool);
+  bltpool_t *bltpool = calloc(1, sizeof *bltpool);
 
   if (bltpool == NULL)
     return NULL;
 
-  bltpool->quit = 0;
-  bltpool->list_jobs_q = bl_new(init_alloc_size, sizeof(bltpool_job_t));
+  bltpool->Q = bl_new(sizeof(bltpool_job_t));
 
-  if (bltpool->list_jobs_q == NULL)
+  if (bltpool->Q == NULL)
   {
     free(bltpool);
     return NULL;

@@ -1,24 +1,24 @@
 #include <string.h>
 #include "bl.h"
 
-#define ALLOC_INC_COUNT 127
+#define ALLOC_INC_COUNT 128
 
-bl_t *bl_new(size_t alloc_count, size_t el_size)
+bl_t *bl_new(size_t el_size)
 {
-  bl_t *list = malloc(sizeof *list + alloc_count * el_size);
+  bl_t *list = malloc(sizeof *list + ALLOC_INC_COUNT * el_size);
 
   if (list == NULL)
     return NULL;
 
   list->count = 0;
   list->el_size = el_size;
-  list->alloc_count = alloc_count;
+  list->alloc_count = ALLOC_INC_COUNT;
   return list;
 }
 
 bl_t *bl_dup(bl_t *list)
 {
-  bl_t *dup = bl_new(list->alloc_count, list->el_size);
+  bl_t *dup = malloc(sizeof *list + list->count * list->el_size);
 
   if (dup == NULL)
     return NULL;
@@ -51,9 +51,9 @@ void *bl_tail(bl_t *list)
 
 bool bl_add(bl_t **list, void *data)
 {
-  if (bl_count(*list) > (*list)->alloc_count - 1)
+  if ((*list)->count > (*list)->alloc_count - 1)
   {
-    bl_t *swap = realloc(*list, sizeof **list + ((*list)->alloc_count + ALLOC_INC_COUNT) * (*list)->el_size);
+    bl_t *swap = realloc(*list, sizeof **list + ((*list)->count + ALLOC_INC_COUNT) * (*list)->el_size);
 
     if (swap == NULL)
       return 0;
@@ -66,7 +66,6 @@ bool bl_add(bl_t **list, void *data)
   (*list)->count++;
   return 1;
 }
-
 
 void bl_remove(bl_t *list, void *data)
 {
@@ -106,20 +105,20 @@ void *bl_prev(bl_t *list, void *data)
   return (char *) data - list->el_size;
 }
 
-void *bl_itr_head(bl_t *list, size_t n)
+void *bl_at(bl_t *list, ssize_t n)
 {
-  if (!bl_count(list) || n > list->count - 1)
+  size_t maximal = list->count - 1;
+
+  if (!list->count || n * n > maximal * maximal)
     return NULL;
 
-  return (char *) bl_head(list) + (n * list->el_size);
-}
+  else if (n > 0)
+    return (char *) bl_head(list) + (n * list->el_size);
 
-void *bl_itr_tail(bl_t *list, size_t n)
-{
-  if (!bl_count(list) || n > list->count - 1)
-    return NULL;
+  else if (n < 0)
+    return (char *) bl_tail(list) + (n + 1) * list->el_size;
 
-  return (char *) bl_tail(list) - n * list->el_size;
+  return bl_head(list);
 }
 
 void bl_remove_tail(bl_t *list)
@@ -142,4 +141,10 @@ void bl_for_each(bl_t *list, void (*callback)(void *, void *), void *userp)
 {
   for (char *n = bl_head(list); n; n = bl_next(list, n))
     callback(n, userp);
+}
+
+void bl_reverse(bl_t **result, bl_t *list)
+{
+  for (void *n = bl_tail(list); n; n = bl_prev(list, n))
+    bl_add(result, n);
 }

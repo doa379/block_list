@@ -17,7 +17,7 @@ void func_cb(void *userp)
 
 int main()
 {
-  bltpool_t *bltpool = bltpool_new(5);
+  bltpool_t *bltpool = bltpool_new();
   srand(time(NULL));
 
   for (unsigned i = 0; i < 10; i++)
