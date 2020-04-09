@@ -9,8 +9,8 @@ static void job_del(void *node, void *userp)
     if (job->ARG[i].size)
       free(job->ARG[i].arg);
 
-  bl_t *list = (bl_t *) userp;
-  bl_remove(list, node);
+  bl_t *Q = (bl_t *) userp;
+  bl_remove(Q, node);
 }
 
 void bltpool_clear(bltpool_t *bltpool)
@@ -124,6 +124,7 @@ void bltpool_del(bltpool_t *bltpool)
   pthread_mutex_destroy(&bltpool->mutex);
   bl_del(bltpool->Q);
   free(bltpool);
+  bltpool = NULL;
 }
 
 bltpool_t *bltpool_new(void)

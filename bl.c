@@ -31,6 +31,7 @@ bl_t *bl_dup(bl_t *list)
 void bl_del(bl_t *list)
 {
   free(list);
+  list = NULL;
 }
 
 void *bl_head(bl_t *list)

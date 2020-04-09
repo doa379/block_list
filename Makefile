@@ -36,4 +36,4 @@ test_bltpool: ${OBJ_TEST_BLTPOOL}
 clean:
 		@echo Cleaning
 		@rm -f ${OBJ_TEST_BL} ${OBJ_TEST_BLTPOOL} ${OBJ_BL}
-		@rm -f libblqueue.so test_bl test_bltpool
+		@rm -f test_bl test_bltpool
