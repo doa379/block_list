@@ -36,7 +36,7 @@ static void queue_pop(bltpool_t *bltpool)
 
 bool bltpool_queue(bltpool_t *bltpool, void (*func)(arg_t []), unsigned n, ...)
 {
-  bltpool_job_t job = { .func = func, .nargs = n };
+  bltpool_job_t job = { .func = *func, .nargs = n };
   va_list valist;
   va_start(valist, n);
 
@@ -63,7 +63,10 @@ bool bltpool_queue(bltpool_t *bltpool, void (*func)(arg_t []), unsigned n, ...)
     
     job.ARG[i] = arg;
   }
-  
+ 
+  for (unsigned i = n; i < MAX_ARGS; i++)
+    job.ARG[i] = (arg_t) { NULL, 0 };
+
   va_end(valist);
   pthread_mutex_lock(&bltpool->mutex);
   
@@ -105,7 +108,7 @@ static void *worker_th(void *userp)
 
     bltpool_job_t *job = bl_head(bltpool->Q);
     pthread_mutex_unlock(&bltpool->mutex);
-    (job->func)(job->ARG);
+    (*job->func)(job->ARG);
     pthread_mutex_lock(&bltpool->mutex);
     queue_pop(bltpool);
     pthread_mutex_unlock(&bltpool->mutex);
