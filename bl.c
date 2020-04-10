@@ -24,7 +24,7 @@ bl_t *bl_dup(bl_t *list)
   if (dup == NULL)
     return NULL;
 
-  memcpy(dup, list, sizeof *list + size * list->el_size);
+  memcpy(dup, list, sizeof *list + list->count * list->el_size);
   return dup;
 }
 
