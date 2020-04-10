@@ -48,7 +48,6 @@ int main()
 
   printf("\nRemove from head\n");
   for (int *n = bl_head(list), i = 0; n && i < 2; n = bl_next(list, n), i++)
-    //if (i == 1)
     bl_remove(list, n);
 
   for (int i = 0; i < bl_count(list); i++)

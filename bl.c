@@ -1,7 +1,7 @@
 #include <string.h>
 #include "bl.h"
 
-#define ALLOC_INC_COUNT 128
+#define ALLOC_INC_COUNT 32
 
 bl_t *bl_new(size_t el_size)
 {
@@ -73,7 +73,7 @@ void bl_remove(bl_t *list, void *data)
   if (data == bl_tail(list));
 
   else if (data == bl_head(list) && bl_count(list) > 1)
-    memcpy(data, bl_next(list, data), (bl_count(list) - 1) * list->el_size);
+    memcpy(data, bl_next(list, data), (list->count - 1) * list->el_size);
 
   else
   {
