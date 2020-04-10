@@ -18,13 +18,13 @@ bl_t *bl_new(size_t el_size)
 
 bl_t *bl_dup(bl_t *list)
 {
-  bl_t *dup = malloc(sizeof *list + list->count * list->el_size);
+  size_t size = (list->count / ALLOC_INC_COUNT + 1) * ALLOC_INC_COUNT;
+  bl_t *dup = malloc(sizeof *list + size * list->el_size);
 
   if (dup == NULL)
     return NULL;
 
-  dup->count = list->count;
-  memcpy(dup, list, sizeof *list + list->count * list->el_size);
+  memcpy(dup, list, sizeof *list + size * list->el_size);
   return dup;
 }
 

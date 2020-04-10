@@ -10,7 +10,6 @@ struct bl_s;
 typedef struct bl_s
 {
   size_t count, el_size, alloc_count;
-  struct bl_s **addr;
   char data[];
 } bl_t;
 
