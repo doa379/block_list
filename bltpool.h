@@ -1,5 +1,5 @@
-#ifndef BLOCK_TPOOL_H
-#define BLOCK_TPOOL_H
+#ifndef BLTPOOL_H
+#define BLTPOOL_H
 
 #include <pthread.h>
 #include <stdarg.h>

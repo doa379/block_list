@@ -5,9 +5,7 @@
 #include <stdbool.h>
 #include <sys/types.h>
 
-struct bl_s;
-
-typedef struct bl_s
+typedef struct
 {
   size_t count, el_size, alloc_count;
   char data[];
