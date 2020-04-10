@@ -36,7 +36,7 @@ static void queue_pop(bltpool_t *bltpool)
 
 bool bltpool_queue(bltpool_t *bltpool, void (*func)(arg_t []), unsigned n, ...)
 {
-  bltpool_job_t job = { .func = *func, .nargs = n };
+  bltpool_job_t job = { .func = func, .nargs = n };
   va_list valist;
   va_start(valist, n);
 
