@@ -56,7 +56,7 @@ int main()
 
   printf("\n");
   bl_del(list);
-  printf("\nStoring Pointer\n===============\n");
+  printf("\nList of Pointers\n===============\n");
   int V[] = { 4, 7, 8, 9 };
   bl_t *list_p = bl_new(sizeof(int *));
 
@@ -71,7 +71,7 @@ int main()
   putchar('\n');
 
   for (int **i = bl_head(list_p); i; i = bl_next(list_p, i))
-    printf("%d ", **(int **) i);
+    printf("%d ", **i);
 
   putchar('\n');
   bl_del(list_p);
