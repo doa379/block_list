@@ -105,7 +105,7 @@ static void *worker_th(void *userp)
       pthread_mutex_unlock(&bltpool->mutex);
       return NULL;
     }
-    /* Need to get a copy of head job because the location 
+    /* Need to make a copy of head job because the location 
      * of the list will change as the list is realloc'd when
      * new elements are added to it.
      */
