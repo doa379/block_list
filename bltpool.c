@@ -105,10 +105,18 @@ static void *worker_th(void *userp)
       pthread_mutex_unlock(&bltpool->mutex);
       return NULL;
     }
+    /* Need to get a copy of head job because the location 
+     * of the list will change as the list is realloc'd when
+     * new elements are added to it.
+     */
+    bltpool_job_t *job = bl_head(bltpool->Q), 
+                  localjob = { .func = job->func };
 
-    bltpool_job_t *job = bl_head(bltpool->Q);
+    for (unsigned i = 0; i < MAX_ARGS; i++)
+      localjob.ARG[i] = job->ARG[i];
+
     pthread_mutex_unlock(&bltpool->mutex);
-    (*job->func)(job->ARG);
+    localjob.func(localjob.ARG);
     pthread_mutex_lock(&bltpool->mutex);
     queue_pop(bltpool);
     pthread_mutex_unlock(&bltpool->mutex);
